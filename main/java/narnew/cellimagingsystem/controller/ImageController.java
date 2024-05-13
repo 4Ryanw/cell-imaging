@@ -66,9 +66,9 @@ public class ImageController {
         //todo 待修改  先固定一张
         CellImage fix1;
         if (type==1){
-            fix1  = imageService.getById(1);
+            fix1  = imageService.getById("1789860595933700098");
         }else {
-            fix1  = imageService.getById(2);
+            fix1  = imageService.getById("1789860611318407169");
         }
 
         imageProcessingHistory.setImageIdAfter(fix1.getId());
