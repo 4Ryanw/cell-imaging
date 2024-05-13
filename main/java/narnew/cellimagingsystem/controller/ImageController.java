@@ -75,7 +75,7 @@ public class ImageController {
         imageProcessingHistory.setUserId(userId);
         historyService.save(imageProcessingHistory);
 
-        return Response.with(cellImage);
+        return Response.with(fix1);
     }
 
     /**
