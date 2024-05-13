@@ -1,0 +1,12 @@
+#spring.application.name: cell-imaging-system
+server:
+  port: 8000
+spring:
+  jackson:
+    time-zone: GMT+8
+  datasource:
+      url: jdbc:mysql://47.109.33.12:3306/cell-imaging-system
+      username: admin
+      password: 'Aa314184417@!'
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
