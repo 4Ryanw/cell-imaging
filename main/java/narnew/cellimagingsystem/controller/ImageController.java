@@ -17,10 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.time.LocalDate;
-import java.util.Base64;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * TODO
@@ -39,7 +36,8 @@ public class ImageController {
 
     @PostMapping("/upload")
     @ApiOperation("图片上传")
-    public Response<CellImage> uploadFile(MultipartFile multipartFile, String userId, int type) throws IOException {
+    public Response<List<CellImage>> uploadFile(MultipartFile multipartFile, String userId, int type) throws IOException {
+        ArrayList<CellImage> resList = new ArrayList<>();
         CellImage cellImage = new CellImage();
         File file = new File(ImageUtil.saveTemp(multipartFile, ImageUtil.getFileType(multipartFile)));
 
@@ -75,7 +73,9 @@ public class ImageController {
         imageProcessingHistory.setUserId(userId);
         historyService.save(imageProcessingHistory);
 
-        return Response.with(fix1);
+        resList.add(cellImage);
+        resList.add(fix1);
+        return Response.with(resList);
     }
 
     /**

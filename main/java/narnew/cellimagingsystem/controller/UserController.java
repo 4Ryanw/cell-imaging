@@ -17,8 +17,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -42,7 +40,7 @@ public class UserController {
     @PostMapping("/login")
     public Response<UserInfoDto> login(
             HttpServletRequest request,
-            HttpServletResponse response, @RequestBody LoginUserDto user
+            @RequestBody LoginUserDto user
             ) {
         UserInfoDto account = userService.getUserByUserName(user.getUserName());
         if (StringUtils.isEmpty(account)) {
@@ -85,13 +83,6 @@ public class UserController {
         LambdaQueryWrapper<UserInfoDto> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(UserInfoDto::getRole,false);
         lambdaQueryWrapper.orderByDesc(UserInfoDto::getCreatedTime);
-//        if (query.getUsePage() != null && query.getUsePage()) {
-//            records = page(page, lambdaQueryWrapper).getRecords();
-//        } else
-        ;
-//        records = userService.list (lambdaQueryWrapper);
-//            page.setTotal(records.size());
-//        page.setRecords(records);
         return Response.with( userService.page(page, lambdaQueryWrapper));
     }
 }
