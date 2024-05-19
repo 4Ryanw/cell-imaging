@@ -41,7 +41,8 @@ public class ImageUtil {
         if (file == null || file.isEmpty()) {
             throw new CoreException(ErrorCodeEnum.FILE_NOT_EMPTY);
         }
-        File localFile = FileUtil.createTempFile("cell_", suffixName, true);
+        File dir = new File("./file/");
+        File localFile = FileUtil.createTempFile("cell_", suffixName, dir,true);
         try {
             //把上传的文件保存至本地
             file.transferTo(localFile);

@@ -19,7 +19,7 @@ import java.util.Date;
 public class ImageHistoryVo {
     @JsonFormat(pattern ="yyyy-MM-dd")
     private Date date;
-    private String base64_before;
-    private String base64_after;
+    private String fileId_before;
+    private String fileId_after;
 
 }

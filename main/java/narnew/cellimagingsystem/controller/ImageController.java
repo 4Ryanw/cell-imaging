@@ -1,23 +1,24 @@
 package narnew.cellimagingsystem.controller;
 
-import cn.hutool.core.io.FileUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import narnew.cellimagingsystem.base.Response;
 import narnew.cellimagingsystem.entity.CellImage;
 import narnew.cellimagingsystem.entity.ImageProcessingHistory;
+import narnew.cellimagingsystem.entity.UserInfoDto;
 import narnew.cellimagingsystem.service.HistoryService;
 import narnew.cellimagingsystem.service.ImageService;
-import narnew.cellimagingsystem.utils.ImageUtil;
+import narnew.cellimagingsystem.service.UserService;
 import narnew.cellimagingsystem.vo.ImageHistoryVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
-import java.time.LocalDate;
-import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * TODO
@@ -34,70 +35,68 @@ public class ImageController {
     @Autowired
     HistoryService historyService;
 
+    @Autowired
+    UserService userService;
+
     @PostMapping("/upload")
     @ApiOperation("图片上传")
-    public Response<List<CellImage>> uploadFile(MultipartFile multipartFile, String userId, int type) throws IOException {
-        ArrayList<CellImage> resList = new ArrayList<>();
-        CellImage cellImage = new CellImage();
-        File file = new File(ImageUtil.saveTemp(multipartFile, ImageUtil.getFileType(multipartFile)));
-
-        //将图片转为base64
-        FileInputStream fis = new FileInputStream(file);
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = fis.read(buffer)) != -1) {
-            bos.write(buffer, 0, bytesRead);
-        }
-
-        byte[] imageBytes = bos.toByteArray();
-
-        fis.close();
-        bos.close();
-        cellImage.setUserId(userId);
-        cellImage.setContent(Base64.getEncoder().encodeToString(imageBytes));
-        imageService.save(cellImage);
+    public Response<String> uploadFile(MultipartFile multipartFile, HttpServletRequest request, int type) {
+        //获取当前用户
+        UserInfoDto loginUser = userService.getLoginUser(request);
+        String userId = loginUser.getId();
+        //处理图片 获取处理前后图片id
+        String[] imgIdArr = imageService.deal(multipartFile, userId);
         //添加历史记录
-        ImageProcessingHistory imageProcessingHistory = new ImageProcessingHistory();
-
-        imageProcessingHistory.setImageIdBefore(cellImage.getId());
-        //todo 待修改  先固定一张
-        CellImage fix1;
-        if (type==1){
-            fix1  = imageService.getById("1789860595933700098");
-        }else {
-            fix1  = imageService.getById("1789860611318407169");
-        }
-
-        imageProcessingHistory.setImageIdAfter(fix1.getId());
-        imageProcessingHistory.setUserId(userId);
-        historyService.save(imageProcessingHistory);
-
-        resList.add(cellImage);
-        resList.add(fix1);
-        return Response.with(resList);
+        historyService.addRecord(imgIdArr,userId,type);
+        //返回处理后图片的id
+        return Response.with(imgIdArr[1]);
     }
 
     /**
-     * 根据用户id查询图片历史记录
+     * 查询图片历史记录
+     * 普通用户只能看到自己的记录；管理员可以看到所有
      * @return list
      */
-    @GetMapping("/historyList/{userId}")
+    @GetMapping("/historyList")
     @ApiOperation("历史列表")
-    public Response<List<ImageHistoryVo>> imageList(@PathVariable String userId){
+    public Response<List<ImageHistoryVo>> imageList(HttpServletRequest request){
+        UserInfoDto loginUser = userService.getLoginUser(request);
         LinkedList<ImageHistoryVo> res = new LinkedList<>();
-        LambdaQueryWrapper<ImageProcessingHistory> lqw = new LambdaQueryWrapper();
-        lqw.eq(ImageProcessingHistory::getUserId,userId).orderByDesc(ImageProcessingHistory::getCreatedTime);
+//        LambdaQueryWrapper<ImageProcessingHistory> lqw = new LambdaQueryWrapper();
+        LambdaQueryWrapper<ImageProcessingHistory> lqw = new LambdaQueryWrapper<>();
+        //不同权限查看不同
+        lqw.eq(!loginUser.getRole(),ImageProcessingHistory::getUserId,loginUser.getId()).
+                orderByDesc(ImageProcessingHistory::getCreatedTime);
         List<ImageProcessingHistory> list = historyService.list(lqw);
         for (ImageProcessingHistory imageProcessingHistory : list) {
             ImageHistoryVo imageHistoryVo = new ImageHistoryVo();
             CellImage before = imageService.getById(imageProcessingHistory.getImageIdBefore());
             CellImage after = imageService.getById(imageProcessingHistory.getImageIdAfter());
             imageHistoryVo.setDate(before.getCreatedTime());
-            imageHistoryVo.setBase64_before(before.getContent());
-            imageHistoryVo.setBase64_after(after.getContent());
+            imageHistoryVo.setFileId_before(before.getId());
+            imageHistoryVo.setFileId_after(after.getId());
             res.add(imageHistoryVo);
         }
         return Response.with(res);
     }
+    @PutMapping("{historyId}")
+    @ApiOperation("修改历史备注")
+    public Response<String> updateNote(@PathVariable String historyId,String note){
+        historyService.updateNote(historyId,note);
+        return Response.with();
+    }
+
+
+    /**
+     * 通过文件id预览
+     *
+     * @param id       文件id
+     * @param response res
+     */
+    @GetMapping("/preview/{id}")
+    @ApiOperation("文件预览-path")
+    public void previewFileByPath(@PathVariable String id, HttpServletResponse response) {
+        imageService.preview(id, response);
+    }
+
 }

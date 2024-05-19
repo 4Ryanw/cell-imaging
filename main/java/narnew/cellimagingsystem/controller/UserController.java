@@ -1,5 +1,7 @@
 package narnew.cellimagingsystem.controller;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.jwt.JWTUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
@@ -13,11 +15,14 @@ import narnew.cellimagingsystem.service.UserService;
 import narnew.cellimagingsystem.utils.SHA;
 import narnew.cellimagingsystem.vo.LoginUserDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.UUID;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 主页面Controller
@@ -31,6 +36,9 @@ import java.util.UUID;
 public class UserController {
     @Autowired
     private UserService userService;
+    @Value("${jwtKey}")
+    private String JWT_KEY;
+
 
     /**
      * 用户登录验证
@@ -39,39 +47,70 @@ public class UserController {
     @ApiOperation("用户登录")
     @PostMapping("/login")
     public Response<UserInfoDto> login(
-            HttpServletRequest request,
+            HttpServletResponse res,
             @RequestBody LoginUserDto user
             ) {
-        UserInfoDto account = userService.getUserByUserName(user.getUserName());
-        if (StringUtils.isEmpty(account)) {
+        UserInfoDto account;
+        //用户名登录
+        if (!StringUtils.isEmpty(user.getUserName())){
+            account = userService.getUserByUserName(user.getUserName());
+        } else {
+            //邮箱登录
+            account = userService.getUserByEmail(user.getEmail());
+        }
+
+        if (ObjectUtil.isNull(account)) {
             throw new CoreException(ErrorCodeEnum.NOT_EXISTS, "用户不存在");
         }
+
         String passwordTrue = account.getPasswordHash();
-        if (StringUtils.isEmpty(account)) {
-            throw new CoreException(ErrorCodeEnum.NOT_EXISTS, "用户不存在");
-        } else if (!passwordTrue.equals(SHA.encrypt(user.getPassword()))) {
+        if (!passwordTrue.equals(SHA.encrypt(user.getPassword()))) {
             throw new CoreException(ErrorCodeEnum.NOT_EXISTS, "密码错误");
         } else {
-            String token = UUID.randomUUID().toString();
-            request.getSession().setAttribute("token", token);
-            request.setAttribute("token", token);
+            //签发token
+            account.setPasswordHash(null);
+            Map<String, Object> map = new HashMap<>();
+            //过期时间 1小时
+            map.put("uid",account.getId());
+            map.put("expire_time", System.currentTimeMillis() + 1000 * 60 * 60 );
+            String token = JWTUtil.createToken(map, JWT_KEY.getBytes());
+            res.setHeader("Set-Cookie", "Authorization=" + token + "; Max-Age=86400; Path=/; ");
+            //Bearer
             account.setPasswordHash("");
             return Response.with(account);
         }
     }
 
+    @ApiOperation("用户注销")
+    @PostMapping("/logout")
+    public Response<String> logout(HttpServletResponse res){
+        // 撤销令牌
+        Cookie cookie = new Cookie("Authorization", null);
+        // 设置有效期为 0，使 Cookie 失效
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        res.addCookie(cookie);
+        return Response.with("注销成功");
+    }
 
     @ApiOperation("用户新增")
-    @PostMapping()
-    public Response add(@RequestBody UserInfoDto account){
+    @PutMapping()
+    public Response<String> add(@RequestBody UserInfoDto account){
         userService.addAccount(account);
         account.setRole(false);
         return Response.with();
     }
 
+    @ApiOperation("用户修改")
+    @PostMapping()
+    public Response<String> update(@RequestBody UserInfoDto account){
+        userService.updateUser(account);
+        return Response.with();
+    }
+
     @ApiOperation("用户删除")
     @DeleteMapping("/{id}")
-    public Response delete(@PathVariable String id){
+    public Response<String> delete(@PathVariable String id){
         userService.removeById(id);
         return Response.with();
     }
