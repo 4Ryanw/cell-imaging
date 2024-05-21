@@ -9,6 +9,7 @@ import narnew.cellimagingsystem.entity.Message;
 import narnew.cellimagingsystem.mapper.HistoryMapper;
 import narnew.cellimagingsystem.mapper.MessageMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.text.SimpleDateFormat;
@@ -39,11 +40,14 @@ public class MessageService extends ServiceImpl<MessageMapper, Message> {
             treeNode.setId(qualityNode.getId());
             treeNode.setParentId(qualityNode.getParentId());
         });
-        for (Tree<Long> tree : resList) {
-            if (StringUtils.isEmpty(tree.get("sons"))) {
-                tree.putExtra("sons",new ArrayList<>());
+        if (!CollectionUtils.isEmpty(resList)) {
+            for (Tree<Long> tree : resList) {
+                if (StringUtils.isEmpty(tree.get("sons"))) {
+                    tree.putExtra("sons",new ArrayList<>());
+                }
             }
         }
-        return resList;
+
+        return resList==null? new ArrayList<>():resList;
     }
 }

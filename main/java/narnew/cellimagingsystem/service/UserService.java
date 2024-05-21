@@ -99,6 +99,7 @@ public class UserService extends ServiceImpl<UserMapper, UserInfoDto> {
     }
 
     public void updateUser(UserInfoDto account) {
+        boolean flag = false;
         LambdaUpdateWrapper<UserInfoDto> luw = new LambdaUpdateWrapper<>();
         UserInfoDto old = getById(account.getId());
         if (ObjectUtil.isNull(old)) {
@@ -112,18 +113,24 @@ public class UserService extends ServiceImpl<UserMapper, UserInfoDto> {
            if (!account.getUserName().equals(old.getUserName())){
                userNameCheck(account);
                luw.set(UserInfoDto::getUserName,account.getUserName());
+               flag = true;
            }
         }
         if (!StringUtils.isEmpty(account.getEmail())) {
             if (!account.getEmail().equals(old.getEmail())) {
                 userEmailCheck(account);
                 luw.set(UserInfoDto::getEmail,account.getEmail());
+                flag = true;
             }
         }
         if (!StringUtils.isEmpty(account.getPasswordHash())) {
             String newPasswordHash = SHA.encrypt(account.getPasswordHash());
             luw.set(UserInfoDto::getPasswordHash,newPasswordHash);
+            flag = true;
         }
-        update(luw);
+        if (flag) {
+            update(luw);
+        }
+
     }
 }

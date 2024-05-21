@@ -23,7 +23,7 @@ import java.util.List;
  * @since 2024年05月12日
  */
 @RestController
-@RequestMapping("/image")
+@RequestMapping("/message")
 @Api(tags = "消息留言")
 public class MessageController {
     @Autowired

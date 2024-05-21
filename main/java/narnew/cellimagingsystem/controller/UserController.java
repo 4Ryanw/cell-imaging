@@ -118,7 +118,12 @@ public class UserController {
 
     @ApiOperation("用户删除")
     @DeleteMapping("/{id}")
-    public Response<String> delete(@PathVariable String id){
+    public Response<String> delete(@PathVariable String id,HttpServletRequest request){
+        //鉴权
+        UserInfoDto loginUser = userService.getLoginUser(request);
+        if (!loginUser.getRole()) {
+            throw new CoreException(ErrorCodeEnum.NOT_AUTH_OPTION);
+        }
         userService.removeById(id);
         return Response.with();
     }
