@@ -2,7 +2,9 @@ package narnew.cellimagingsystem.service;
 
 import cn.hutool.core.io.IoUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import narnew.cellimagingsystem.CoreException;
 import narnew.cellimagingsystem.entity.CellImage;
+import narnew.cellimagingsystem.enums.ErrorCodeEnum;
 import narnew.cellimagingsystem.mapper.ImageMapper;
 import narnew.cellimagingsystem.utils.ImageUtil;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,19 +25,29 @@ import java.util.List;
  */
 @Service
 public class ImageService extends ServiceImpl<ImageMapper, CellImage> {
+
+    @Value("${pythonScript2}")
+    private String PY_PATH_SPLIT;
     @Value("${pythonScript}")
-    private String PY_PATH;
+    private String PY_PATH_CHECK;
 
 
 
-    private File usePython(String fileName,String path) {
+
+
+    private File usePython(String fileName,String path,int type) {
 
         String property = System.getProperty("user.dir");
         String newFilePath = property+"/file/"+fileName+"_after";
         // 设置Python脚本及参数
         List<String> command = new ArrayList<>();
         command.add("python3");
-        command.add(PY_PATH);
+        switch (type){
+            case 1:command.add(PY_PATH_SPLIT);break;
+            case 2:command.add(PY_PATH_CHECK);break;
+            default:
+                throw new CoreException(ErrorCodeEnum.UNSUPPORT);
+        }
         command.add(path);
         command.add(newFilePath);
         try {
@@ -87,7 +99,7 @@ public class ImageService extends ServiceImpl<ImageMapper, CellImage> {
      * @param multipartFile 文件
      * @param userId 用户id
      */
-    public String[] deal(MultipartFile multipartFile, String userId) {
+    public String[] deal(MultipartFile multipartFile, String userId,int type) {
         //保存处理前的图片
         CellImage beforeImage = new CellImage();
         File beforeFile = new File(ImageUtil.saveTemp(multipartFile, ImageUtil.getFileType(multipartFile)));
@@ -95,9 +107,8 @@ public class ImageService extends ServiceImpl<ImageMapper, CellImage> {
         beforeImage.setUserId(userId);
         beforeImage.setFilePath(beforeFile.getPath());
         save(beforeImage);
-
         //读取python代码生成图片
-        File resFile = usePython(beforeFile.getName().split("\\.")[0],beforeFile.getPath());
+        File resFile = usePython(beforeFile.getName().split("\\.")[0],beforeFile.getPath(),type);
         //生成后的图片保存入库
         CellImage afterImage = new CellImage();
         afterImage.setUserId(userId);

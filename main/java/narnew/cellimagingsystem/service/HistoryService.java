@@ -20,8 +20,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class HistoryService extends ServiceImpl<HistoryMapper, ImageProcessingHistory> {
 
-//    private final static String TYPE_SPLIT = "细胞分割";
-//    private final static String TYPE_CHECK = "细胞检测";
+
     public void addRecord(String[] imgIds,String userId,int type) {
         String beforeImageId = imgIds[0];
         String afterImageId = imgIds[1];

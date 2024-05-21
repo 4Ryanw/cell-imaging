@@ -11,5 +11,6 @@ spring:
       driver-class-name: com.mysql.cj.jdbc.Driver
 #python脚本
 pythonScript: /Users/narnew/PycharmProjects/meng/fengzhuang.py
+pythonScript2: /Users/narnew/PycharmProjects/meng/new-seg.py
 #JWT密钥
 jwtKey: 4g7R9h2JkL8pN6s5D3fG

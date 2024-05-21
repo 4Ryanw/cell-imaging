@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * TODO
@@ -38,6 +39,9 @@ public class ImageController {
     @Autowired
     UserService userService;
 
+    public final static String TYPE_SPLIT = "细胞分割";
+    public final static String TYPE_CHECK = "细胞检测";
+
     @PostMapping("/upload")
     @ApiOperation("图片上传")
     public Response<String> uploadFile(MultipartFile multipartFile, HttpServletRequest request, int type) {
@@ -45,7 +49,7 @@ public class ImageController {
         UserInfoDto loginUser = userService.getLoginUser(request);
         String userId = loginUser.getId();
         //处理图片 获取处理前后图片id
-        String[] imgIdArr = imageService.deal(multipartFile, userId);
+        String[] imgIdArr = imageService.deal(multipartFile, userId,type);
         //添加历史记录
         historyService.addRecord(imgIdArr,userId,type);
         //返回处理后图片的id
@@ -59,22 +63,26 @@ public class ImageController {
      */
     @GetMapping("/historyList")
     @ApiOperation("历史列表")
-    public Response<List<ImageHistoryVo>> imageList(HttpServletRequest request){
+    public Response<List<ImageHistoryVo>> imageList(HttpServletRequest request,Integer type){
+
         UserInfoDto loginUser = userService.getLoginUser(request);
         LinkedList<ImageHistoryVo> res = new LinkedList<>();
-//        LambdaQueryWrapper<ImageProcessingHistory> lqw = new LambdaQueryWrapper();
         LambdaQueryWrapper<ImageProcessingHistory> lqw = new LambdaQueryWrapper<>();
         //不同权限查看不同
-        lqw.eq(!loginUser.getRole(),ImageProcessingHistory::getUserId,loginUser.getId()).
-                orderByDesc(ImageProcessingHistory::getCreatedTime);
+        lqw.eq(!loginUser.getRole(),ImageProcessingHistory::getUserId,loginUser.getId())
+                .eq(type !=null,ImageProcessingHistory::getType, type)
+                .orderByDesc(ImageProcessingHistory::getCreatedTime);
         List<ImageProcessingHistory> list = historyService.list(lqw);
         for (ImageProcessingHistory imageProcessingHistory : list) {
             ImageHistoryVo imageHistoryVo = new ImageHistoryVo();
             CellImage before = imageService.getById(imageProcessingHistory.getImageIdBefore());
             CellImage after = imageService.getById(imageProcessingHistory.getImageIdAfter());
+            imageHistoryVo.setId(imageProcessingHistory.getId());
             imageHistoryVo.setDate(before.getCreatedTime());
             imageHistoryVo.setFileId_before(before.getId());
             imageHistoryVo.setFileId_after(after.getId());
+            imageHistoryVo.setNote(imageProcessingHistory.getNote());
+            imageHistoryVo.setType(Objects.equals(imageProcessingHistory.getType(), 1) ?TYPE_SPLIT:TYPE_CHECK);
             res.add(imageHistoryVo);
         }
         return Response.with(res);

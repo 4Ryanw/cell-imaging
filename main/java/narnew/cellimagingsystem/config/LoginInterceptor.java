@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -29,9 +30,8 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
 //        调试接口时放开
         String token = getToken(request);
         if (StringUtils.isEmpty(token)) {
+            response.setHeader("location", "/user/login");
             throw new CoreException(ErrorCodeEnum.USER_NOT_LOGIN);
-//            writeResponse(response, 401, "未登录");
-//            return false;
         }
         //token校验
         if (!JWTUtil.verify(token,JWT_KEY.getBytes())) {
@@ -43,20 +43,12 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
         return super.preHandle(request, response, handler);
     }
 
-    private void writeResponse(HttpServletResponse response, int httpCode, String msg) {
-        try {
-            response.setCharacterEncoding("UTF-8");
-            response.setContentType("application/json; charset=utf-8");
-            response.setStatus(401);
-            Response<String> rp = Response.with(msg);
-            response.getWriter().write(JSONUtil.toJsonStr(rp));
-        } catch (Exception e) {
-            log.error("writeResponse 异常:" + e);
-        }
-    }
 
     public static String getToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return null;
+        }
         String token = null;
         for (Cookie cookie : cookies) {
             if ("Authorization".equals(cookie.getName())) {

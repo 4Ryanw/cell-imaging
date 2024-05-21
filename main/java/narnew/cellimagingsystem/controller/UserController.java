@@ -20,6 +20,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
@@ -94,18 +95,25 @@ public class UserController {
     }
 
     @ApiOperation("用户新增")
-    @PutMapping()
+    @PostMapping()
     public Response<String> add(@RequestBody UserInfoDto account){
-        userService.addAccount(account);
         account.setRole(false);
+        userService.addAccount(account);
         return Response.with();
     }
 
     @ApiOperation("用户修改")
-    @PostMapping()
+    @PutMapping()
     public Response<String> update(@RequestBody UserInfoDto account){
         userService.updateUser(account);
         return Response.with();
+    }
+
+    @ApiOperation("获取登录用户信息")
+    @GetMapping()
+    public Response<UserInfoDto> getUserInfo(HttpServletRequest request){
+        UserInfoDto loginUser = userService.getLoginUser(request);
+        return Response.with(loginUser);
     }
 
     @ApiOperation("用户删除")
