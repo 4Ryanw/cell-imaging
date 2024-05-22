@@ -20,9 +20,10 @@ public class ImageHistoryVo {
     private String id;
     @JsonFormat(pattern ="yyyy-MM-dd")
     private Date date;
-    private String fileId_before;
-    private String fileId_after;
+    private String imageIdAfter;
+    private String imageIdBefore;
     private String type;
     private String note;
+    private String creator;
 
 }

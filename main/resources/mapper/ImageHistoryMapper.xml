@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="narnew.cellimagingsystem.mapper.HistoryMapper">
+
+
+
+    <select id="listHistory" resultType="narnew.cellimagingsystem.vo.ImageHistoryVo">
+        select a.id,a.user_id,b.user_name as creator,
+                a.created_time as date,
+               a.image_id_after,
+               a.image_id_before ,
+               if(type=1,'细胞分割','细胞检测') as type,
+               note
+        from IMAGE_PROCESSING_HISTORY a
+        left join USER_INFO b on a.user_id =b.id
+        <where>
+            <if test = "type != null">
+                a.type = #{type}
+            </if>
+            <if test="!role">
+             and   a.user_id = #{userId}
+            </if>
+        </where>
+    </select>
+
+
+
+
+
+</mapper>

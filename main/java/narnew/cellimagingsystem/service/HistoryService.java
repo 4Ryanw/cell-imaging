@@ -6,10 +6,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import narnew.cellimagingsystem.CoreException;
 import narnew.cellimagingsystem.entity.CellImage;
 import narnew.cellimagingsystem.entity.ImageProcessingHistory;
+import narnew.cellimagingsystem.entity.UserInfoDto;
 import narnew.cellimagingsystem.enums.ErrorCodeEnum;
 import narnew.cellimagingsystem.mapper.HistoryMapper;
 import narnew.cellimagingsystem.mapper.ImageMapper;
+import narnew.cellimagingsystem.vo.ImageHistoryVo;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * 历史服务
@@ -43,5 +47,9 @@ public class HistoryService extends ServiceImpl<HistoryMapper, ImageProcessingHi
         luw.set(ImageProcessingHistory::getNote,note)
                 .eq(ImageProcessingHistory::getId,historyId);
         update(luw);
+    }
+
+    public List<ImageHistoryVo> listHistory(Integer type , UserInfoDto userInfo){
+        return getBaseMapper().listHistory(userInfo.getRole(), userInfo.getId(), type);
     }
 }
