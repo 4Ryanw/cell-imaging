@@ -66,25 +66,7 @@ public class ImageController {
     public Response<List<ImageHistoryVo>> imageList(HttpServletRequest request,Integer type){
 
         UserInfoDto loginUser = userService.getLoginUser(request);
-//        LinkedList<ImageHistoryVo> res = new LinkedList<>();
         List<ImageHistoryVo> res = historyService.listHistory(type, loginUser);
-//        //不同权限查看不同
-//        LambdaQueryWrapper<ImageProcessingHistory> lqw = new LambdaQueryWrapper<>();
-
-//        lqw.eq(!loginUser.getRole(),ImageProcessingHistory::getUserId,loginUser.getId())
-//                .eq(type !=null,ImageProcessingHistory::getType, type)
-//                .orderByDesc(ImageProcessingHistory::getCreatedTime);
-//        List<ImageProcessingHistory> list = historyService.list(lqw);
-//        for (ImageProcessingHistory imageProcessingHistory : list) {
-//            ImageHistoryVo imageHistoryVo = new ImageHistoryVo();
-//            imageHistoryVo.setId(imageProcessingHistory.getId());
-//            imageHistoryVo.setDate(imageProcessingHistory.getCreatedTime());
-//            imageHistoryVo.setFileId_before(imageProcessingHistory.getImageIdBefore());
-//            imageHistoryVo.setFileId_after(imageProcessingHistory.getImageIdAfter());
-//            imageHistoryVo.setNote(imageProcessingHistory.getNote());
-//            imageHistoryVo.setType(Objects.equals(imageProcessingHistory.getType(), 1) ?TYPE_SPLIT:TYPE_CHECK);
-//            res.add(imageHistoryVo);
-//        }
         return Response.with(res);
     }
     @PutMapping("{historyId}")

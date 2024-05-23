@@ -43,7 +43,6 @@ public class HistoryService extends ServiceImpl<HistoryMapper, ImageProcessingHi
             throw new CoreException(ErrorCodeEnum.INVALID_PARAMETER);
         }
         LambdaUpdateWrapper<ImageProcessingHistory> luw = new LambdaUpdateWrapper<>();
-//        LambdaUpdateWrapper<ImageProcessingHistory> luw = new LambdaUpdateWrapper();
         luw.set(ImageProcessingHistory::getNote,note)
                 .eq(ImageProcessingHistory::getId,historyId);
         update(luw);
