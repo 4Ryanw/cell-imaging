@@ -27,15 +27,13 @@ import java.util.List;
 @Api(tags = "图片相关")
 public class ImageController {
     @Autowired
-    ImageService imageService;
+    private ImageService imageService;
     @Autowired
-    HistoryService historyService;
+    private HistoryService historyService;
 
     @Autowired
-    UserService userService;
+    private UserService userService;
 
-    public final static String TYPE_SPLIT = "细胞分割";
-    public final static String TYPE_CHECK = "细胞检测";
 
     @PostMapping("/upload")
     @ApiOperation("图片上传")

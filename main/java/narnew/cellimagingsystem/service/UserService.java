@@ -29,8 +29,6 @@ public class UserService extends ServiceImpl<UserMapper, UserInfoDto> {
     @Autowired
     private UserMapper userMapper;
 
-    private final static ThreadLocal<UserInfoDto> THREAD_LOCAL = new ThreadLocal<>();
-
 
     /**
      * 根据用户名查询用户信息
