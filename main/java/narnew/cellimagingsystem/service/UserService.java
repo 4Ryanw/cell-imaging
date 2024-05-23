@@ -50,7 +50,7 @@ public class UserService extends ServiceImpl<UserMapper, UserInfoDto> {
      */
     public UserInfoDto getUserByEmail(String email){
         LambdaQueryWrapper<UserInfoDto> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(UserInfoDto::getUserName, email);
+        lqw.eq(UserInfoDto::getEmail, email);
         return getOne(lqw);
     }
 

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import narnew.cellimagingsystem.CoreException;
+import narnew.cellimagingsystem.annotation.AuthCheck;
 import narnew.cellimagingsystem.base.BasePageQuery;
 import narnew.cellimagingsystem.base.Response;
 import narnew.cellimagingsystem.entity.UserInfoDto;
@@ -117,13 +118,9 @@ public class UserController {
     }
 
     @ApiOperation("用户删除")
+    @AuthCheck
     @DeleteMapping("/{id}")
-    public Response<String> delete(@PathVariable String id,HttpServletRequest request){
-        //鉴权
-        UserInfoDto loginUser = userService.getLoginUser(request);
-        if (!loginUser.getRole()) {
-            throw new CoreException(ErrorCodeEnum.NOT_AUTH_OPTION);
-        }
+    public Response<String> delete(@PathVariable String id){
         userService.removeById(id);
         return Response.with();
     }
